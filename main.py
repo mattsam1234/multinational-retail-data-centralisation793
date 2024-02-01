@@ -3,11 +3,16 @@ from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
 import pandas as pd
 
+#AWS database credentials file name
+aws_creds = 'db_creds.yaml'
+#Local database credentials file name
+local_creds = 'db_creds_local.yaml'
+
 #initialise engine to connect to local database
-local_engine = DatabaseConnector('db_creds_local.yaml')
+local_engine = DatabaseConnector(local_creds)
 
 #initialise engine to connect to aws database
-aws_engine = DatabaseConnector('db_creds.yaml')
+aws_engine = DatabaseConnector(aws_creds)
 
 #get user data from aws
 dirty_user_data = DataExtractor().read_rds_table(table_name='legacy_users', db_connector=aws_engine)
@@ -26,12 +31,12 @@ cleaned_pdf_data = pdf_data_cleaner.clean_card_data()
 local_engine.upload_to_db(df=cleaned_pdf_data, table='dim_card_details')
 
 #Pull data from API - Commented out so not to spend 4mins pulling each time
-#api_pulling_extractor = DataExtractor()
-#number_of_stores = api_pulling_extractor.list_number_of_stores()
+api_pulling_extractor = DataExtractor()
+number_of_stores = api_pulling_extractor.list_number_of_stores()
 #headers_dict = (insert header dictionary)
-#endpoint = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/'
-#column_headers_list = api_pulling_extractor.get_column_headers(endpoint=endpoint, header_dict=headers_dict )
-#api_pulling_extractor.retrieve_stores_data_to_csv(number_of_stores=number_of_stores, endpoint=endpoint, header_dict=headers_dict, column_header_list=column_headers_list)
+endpoint = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/'
+column_headers_list = api_pulling_extractor.get_column_headers(endpoint=endpoint, header_dict=headers_dict )
+api_pulling_extractor.retrieve_stores_data_to_csv(number_of_stores=number_of_stores, endpoint=endpoint, header_dict=headers_dict, column_header_list=column_headers_list)
 
 
 #Data was pulled from api and collated into csv using the retrieve_stores_data_to_csv function in data extractor 
