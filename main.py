@@ -25,12 +25,21 @@ cleaned_pdf_data = pdf_data_cleaner.clean_card_data()
 #send card data to local
 local_engine.upload_to_db(df=cleaned_pdf_data, table='dim_card_details')
 
-#Data was pulled from api and collated into csv using the retrieve_stores_data function in data extractor 
+#Pull data from API - Commented out so not to spend 4mins pulling each time
+#api_pulling_extractor = DataExtractor()
+#number_of_stores = api_pulling_extractor.list_number_of_stores()
+#headers_dict = (insert header dictionary)
+#endpoint = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/'
+#column_headers_list = api_pulling_extractor.get_column_headers(endpoint=endpoint, header_dict=headers_dict )
+#api_pulling_extractor.retrieve_stores_data_to_csv(number_of_stores=number_of_stores, endpoint=endpoint, header_dict=headers_dict, column_header_list=column_headers_list)
+
+
+#Data was pulled from api and collated into csv using the retrieve_stores_data_to_csv function in data extractor 
 #get store data from csv
 dirty_api_data = pd.read_csv('store.csv', index_col='index')
 #clean store data
-api_data_clleaner = DataCleaning(dirty_api_data)
-cleaned_api_data = api_data_clleaner.clean_store_data()
+api_data_cleaner = DataCleaning(dirty_api_data)
+cleaned_api_data = api_data_cleaner.clean_store_data()
 #push store data to local
 local_engine.upload_to_db(df=cleaned_api_data, table='dim_store_details')
 
