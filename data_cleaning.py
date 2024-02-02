@@ -214,6 +214,7 @@ class DataCleaning:
     def _validate_card_numbers(self, card_number_column:str):
         '''
         Drops any row when the card number is not numeric.
+        Drops any value longer than 19 chars long
         
         Parameters
         ----------
@@ -224,6 +225,8 @@ class DataCleaning:
         self.table
         '''
         self.table.drop(self.table[pd.to_numeric(self.table[card_number_column], errors='coerce').notna()].index)
+        mask = self.table[card_number_column].str.len() > 19
+        self.table = self.table[~mask]
         return self.table
         
     def clean_card_data(self):
@@ -301,6 +304,7 @@ class DataCleaning:
         Validate continent.
         Replace nulls in the Web Portal column.
         Remove nulls.
+        
         Parameters
         ----------
         None
@@ -413,13 +417,29 @@ class DataCleaning:
         
         Parameters
         ----------
-        product_price_column(str) : column name
+        product_price_column(str) : Column name
         
         Returns 
         -------
         self.table'''
         self.table[product_price_column] = self.table[product_price_column].str.replace('£', '').str.replace(',', '').str.replace('$', '')
         self.table[product_price_column] = pd.to_numeric(self.table[product_price_column], errors='coerce')
+        return self.table
+    
+    def _validate_EAN(self, EAN_column:str):
+        '''
+        Drops any value longer than 13 chars long. EAN numbers are up to 13 chars long
+        
+        Parameters
+        ----------
+        EAN_column : Column name
+        
+        Returns 
+        -------
+        self.table
+        '''
+        mask = self.table[EAN_column].str.len() > 13
+        self.table = self.table[~mask]
         return self.table
         
     def clean_products_data(self):
@@ -428,6 +448,7 @@ class DataCleaning:
         Converts and corrects the weights column.
         Validate currency column.
         Drop nulls.
+        
         Parameters
         ----------
         None
@@ -436,15 +457,20 @@ class DataCleaning:
         -------
         self.table'''
         
+        #drop null values
+        self.remove_nulls()
         
         #correct data types
         self.table['product_name'] = self.table['product_name'].astype('string')
         self.table['category'] = self.table['category'].astype('string')
         self.table['date_added'] = pd.to_datetime(self.table['date_added'], infer_datetime_format=True, errors='coerce')
-        self.table['EAN'] = pd.to_numeric(self.table['EAN'], errors='coerce')
+        self.table['EAN'] = self.table['EAN'].astype('string')
         self.table['uuid'] = self.table['uuid'].astype('string')
         self.table['removed'] = self.table['removed'].astype('string')
         self.table['product_code'] = self.table['product_code'].astype('string')
+        
+        #Validate EAN numbers
+        self._validate_EAN('EAN')
         
         #Convert and correct the weights column
         self._convert_product_weights()
@@ -452,14 +478,14 @@ class DataCleaning:
         #remove currency symbols 
         self._clean_currency('product_price')
         
-        #drop null values
-        self.remove_nulls()
+        
         
         return self.table
 
     def clean_order_data(self):
         '''Clean the orders table.
         Function to set index to index column and then strip out "first_name", "last_name", "1" and "level_0" columns.
+        
         Parameters
         ----------
         None
