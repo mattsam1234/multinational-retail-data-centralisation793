@@ -105,5 +105,5 @@ class DatabaseConnector:
         SQLalchemy engine 
         '''
         connection = self.engine.connect()
-        df.to_sql(table, connection, if_exists='replace')
+        df.to_sql(table, connection, if_exists='replace', index=False)
         print('data pushed')
