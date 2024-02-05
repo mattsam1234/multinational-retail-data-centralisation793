@@ -38,7 +38,7 @@ class DataCleaning:
         self.table
         '''
         self.table.replace('NULL', np.nan, inplace=True)
-        self.table.dropna(inplace=True)
+        self.table.dropna(inplace=True, how='all')
         return self.table
                
     def _validate_countries(self, country_column:str):
@@ -105,6 +105,7 @@ class DataCleaning:
         -------
         self.table
         '''
+        self.table[country_code_column].replace(to_replace = 'GG', value = 'G',regex=True, inplace=True)
         valid_country_codes = ['GB','DE', 'US' ]
         self.table = self.table[self.table[country_code_column].isin(valid_country_codes)]
         return self.table
@@ -397,7 +398,7 @@ class DataCleaning:
         self.table['unit'] = self.table['weights_tuple'].str[1]
         
         #Find weights with multiplications in and convert to kg
-        self.table.loc[self.table['weights'].str.match(r'\d+ x \d+'), 'weights'] = (self.table.loc[self.table['weights'].str.match(r'\d+ x \d+'), 'weights'].str.extract(r'(\d+) x (\d+)').astype(int).prod(axis=1)) / 100
+        self.table.loc[self.table['weights'].str.match(r'\d+ x \d+', na=False), 'weights'] = (self.table.loc[self.table['weights'].str.match(r'\d+ x \d+', na=False), 'weights'].str.extract(r'(\d+) x (\d+)').astype(int).prod(axis=1)) / 100
         
         #convert all to floats and then convert to Kg
         self.table['weights'] = self.table['weights'].astype('float')
@@ -441,7 +442,23 @@ class DataCleaning:
         mask = self.table[EAN_column].str.len() > 13
         self.table = self.table[~mask]
         return self.table
+    
+    def _validate_removed(self, removed_column_name: str):
+        '''
+        Checks the values in the removed column are either removed or still_avaliable.
         
+        Parameters
+        ----------
+        removed_column_name(str) : column name
+        
+        Returns 
+        -------
+        self.table
+        '''
+        
+        valid_values = ['Still_avaliable', 'Removed']
+        self.table = self.table[self.table[removed_column_name].isin(valid_values)]
+    
     def clean_products_data(self):
         '''Clean the product details table.
         Set correct data types for products table.
@@ -468,6 +485,9 @@ class DataCleaning:
         self.table['uuid'] = self.table['uuid'].astype('string')
         self.table['removed'] = self.table['removed'].astype('string')
         self.table['product_code'] = self.table['product_code'].astype('string')
+        
+        #Validate removed column
+        self._validate_removed('removed')
         
         #Validate EAN numbers
         self._validate_EAN('EAN')
