@@ -145,7 +145,7 @@ class DataCleaning:
         self.table
         '''
         #set correct data types
-        self.table.set_index('index')
+        self.table.set_index('index', inplace=True)
         self.table['first_name'] = self.table['first_name'].astype('string')
         self.table['last_name'] = self.table['last_name'].astype('string')
         self.table['date_of_birth'] = pd.to_datetime(self.table['date_of_birth'], infer_datetime_format=True, errors='coerce')
@@ -214,6 +214,7 @@ class DataCleaning:
     
     def _validate_card_numbers(self, card_number_column:str):
         '''
+        Removes ? from rows
         Drops any row when the card number is not numeric.
         Drops any value longer than 19 chars long
         
@@ -225,6 +226,7 @@ class DataCleaning:
         -------
         self.table
         '''
+        self.table[card_number_column] = self.table[card_number_column].str.replace('?','')
         self.table.drop(self.table[pd.to_numeric(self.table[card_number_column], errors='coerce').notna()].index)
         mask = self.table[card_number_column].str.len() > 19
         self.table = self.table[~mask]
@@ -247,11 +249,17 @@ class DataCleaning:
         -------
         self.table
         '''
+        
+        self.remove_nulls()
+        
         #correct data types
         self.table['card_number'] = self.table['card_number'].astype('string')
         self.table['card_provider'] = self.table['card_provider'].astype('string')
         self.table['expiry_date'] = self.table['expiry_date'].astype('string')
         self.table['date_payment_confirmed'] = pd.to_datetime(self.table['date_payment_confirmed'], errors='coerce')
+        
+        #validate card numbers
+        self._validate_card_numbers(card_number_column='card_number')
         
         #validate card companies
         self._validate_card_providers(card_provider_column='card_provider')
@@ -259,8 +267,6 @@ class DataCleaning:
         #validate expiry dates
         self._validate_expiry_dates(expiry_date_column='expiry_date')
         
-        #validate card numbers
-        self._validate_card_numbers(card_number_column='card_number')
         return self.table
     
     def _validate_continent(self, continent_column:str):
@@ -427,22 +433,6 @@ class DataCleaning:
         self.table[product_price_column] = pd.to_numeric(self.table[product_price_column], errors='coerce')
         return self.table
     
-    def _validate_EAN(self, EAN_column:str):
-        '''
-        Drops any value longer than 13 chars long. EAN numbers are up to 13 chars long
-        
-        Parameters
-        ----------
-        EAN_column : Column name
-        
-        Returns 
-        -------
-        self.table
-        '''
-        mask = self.table[EAN_column].str.len() > 13
-        self.table = self.table[~mask]
-        return self.table
-    
     def _validate_removed(self, removed_column_name: str):
         '''
         Checks the values in the removed column are either removed or still_avaliable.
@@ -488,10 +478,7 @@ class DataCleaning:
         
         #Validate removed column
         self._validate_removed('removed')
-        
-        #Validate EAN numbers
-        self._validate_EAN('EAN')
-        
+                
         #Convert and correct the weights column
         self._convert_product_weights()
         
