@@ -28,6 +28,8 @@ You will then query the database to get up-to-date metrics for the business.
 This project is designed to pull data from multiple different data sources including AWS RDS database, S3 buckets, PDf files, CVS files and more.
 The Data that is pulled is then put into a pandas dataframe and cleaned with a variety of methods.
 The cleaned data is then pushed to a local postgres database.
+Running the sql functions in star_schema_functions.sql creates a star schema for the database.
+The data_queries.sql file has the relevant queries to the questions commented within
 
 ### What I used
 
@@ -43,6 +45,7 @@ In this section I will list the technologies used and the reasons for them
 ### What I learned
 
 During this project I covered a lot of topics I havent really used before. Having comparatively done a lot of pandas I was fairly familiar with the functions I was using. I learned a lot about exploratory data analysis. With methods like info() and value_counts() you can tell a lot about the data regardless of the size and figure out what you need to do to clean the data. On top of this I feel like i have learned a lot about using python in OOP and making functions reusable across multiple data sources.
+On the SQL side of things I learned a lot including the use of window functions. I think the most important part of the SQl side I learned is how to break down a complicated question into subqueries and build an answer to the question given
 
 ## Instructions
 
@@ -62,3 +65,9 @@ RDS_PORT: ******`
 4. Run the main.py file
 
 If all your credentials are correct then the file will pull and clean data from all the sources and then push it to your local Postgres instance
+
+5. Setting up the Star Schema
+
+Run the functions in the star_schema_functions.sql file to setup the schema and create correct table associations
+
+6. Should you choose to want the answers to the questions provided to me, run the queries in the data_queries.sql file.
