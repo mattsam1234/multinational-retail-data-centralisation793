@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np 
+import re
 
 class DataCleaning:
     """
@@ -298,6 +299,38 @@ class DataCleaning:
         web_portal_row = self.table[self.table['store_type'] == 'Web Portal']
         web_portal_row.fillna('N/A', inplace=True)
         return self.table
+    
+    def _get_digits(self, x): 
+        '''
+        Simple function to remove all non numerical values and replace them with blank space
+        
+        Parameters
+        ----------
+        x : row value
+        
+        Returns 
+        -------
+        Substituted value
+        '''
+        return re.sub(r'\D', '', x)
+    
+    def _clean_staff_numbers(self, staff_number_columnn:str):
+        '''
+        Clean the staff numbers by removing any non-numerical values
+        
+        Parameters
+        ----------
+        staff_number_column(str) : The name of the column
+        
+        Returns 
+        -------
+        self.table
+        '''
+        self.table[staff_number_columnn] = self.table[staff_number_columnn].astype(str)
+        self.table[staff_number_columnn] = self.table[staff_number_columnn].fillna('').astype(str)
+        self.table[staff_number_columnn] = self.table[staff_number_columnn].apply(self._get_digits)
+        
+        return self.table
 
 
     
@@ -322,6 +355,8 @@ class DataCleaning:
         '''
         #drop the lat column
         self.table = self.table.drop(columns=['lat'])
+        #clean staff numbers
+        self._clean_staff_numbers('staff_numbers')
         #correct data types
         self.table['address'] = self.table['address'].astype('string')
         self.table['longitude'] = pd.to_numeric(self.table['longitude'], errors='coerce')
@@ -333,12 +368,14 @@ class DataCleaning:
         self.table['latitude'] = pd.to_numeric(self.table['latitude'], errors='coerce')
         self.table['country_code'] = self.table['country_code'].astype('string')
         self.table['continent'] = self.table['continent'].astype('string')
+        
         #validata country code
         self._validate_country_code('country_code')
-        #validate address
-        self._validate_address(address_column='address')
         #clean continent table
         self._validate_continent(continent_column='continent')
+        #validate address
+        self._validate_address(address_column='address')
+        
         #Replace nulls in the Web store row
         self._replace_nulls_if_web()
         #drop null values
@@ -361,7 +398,7 @@ class DataCleaning:
         weight , unit 
         '''
         try:
-            if pd.isna(x):  # Handle missing values directly
+            if pd.isna(x): 
                 return np.nan, np.nan
 
             if x[-2:] in ('kg', 'ml', 'oz'):
@@ -506,7 +543,7 @@ class DataCleaning:
         
     def clean_events_data(self):
         '''Clean the events table.
-        Function to validate the time periods are "Evening", "Midday", "Morning" or "Late_Hours"
+        Function to validate the time periods are "Evening", "Midday", "Morning" or "Late_Hours"
         
         Parameters
         ----------
